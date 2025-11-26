@@ -1,4 +1,4 @@
-<script>
+
         const missions = [
             {
                 id: 1,
@@ -277,4 +277,3 @@
 
         // เริ่มเกม
         renderMission();
-    </script>

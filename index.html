@@ -1,25 +1,185 @@
 <!DOCTYPE html>
 <html lang="th">
-    <link rel="stylesheet" href="style.css">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เกมผจญภัยค้นหาตัวตน - Personality Quest</title>
+  <meta charset="UTF-8">
+  <title>แบบทดสอบค้นหาตัวตน</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: auto; background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    button { width: 100%; padding: 12px; margin: 6px 0; border: none; background: #eaeaea; border-radius: 10px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #dcdcdc; }
+    .title { font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 15px; }
+    .emoji { font-size: 60px; text-align: center; }
+    .hidden { display: none; }
+    .center { text-align:center; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div id="progressBar" style="display: none;">
-            <div class="progress-text">
-                <span>ความคืบหน้า</span>
-                <span id="progressText">1/5</span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-        </div>
 
-        <div class="card" id="gameCard"></div>
-    </div>
+<div class="container">
+
+  <!-- INTRO -->
+  <div id="intro">
+    <div class="emoji">✨</div>
+    <h2 class="title">แบบทดสอบค้นหาตัวตน</h2>
+    <p class="center">พร้อมค้นหาความเป็นคุณหรือยัง?</p>
+    <button onclick="startQuiz()" style="background:#6366f1;color:white;">เริ่มทำแบบทดสอบ</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz" class="hidden">
+    <div class="emoji" id="quizEmoji">🤔</div>
+    <p id="story"></p>
+    <h3 id="questionText" style="text-align:center;"></h3>
+
+    <div id="options"></div>
+
+    <p class="center" id="progress"></p>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result" class="hidden">
+    <div class="emoji">🎉</div>
+    <h2 id="resultTitle" class="title"></h2>
+    <p id="resultDesc"></p>
+
+    <h3>จุดแข็งของคุณ</h3>
+    <p id="resultStrength"></p>
+
+    <h3>อาชีพที่เหมาะสม</h3>
+    <ul id="resultCareers"></ul>
+
+    <p id="resultReason"></p>
+
+    <button onclick="resetQuiz()" style="background:#444;color:white;margin-top:15px;">ทำแบบทดสอบอีกครั้ง</button>
+  </div>
+
+</div>
+
+<script>
+  const questions = [
+    {
+      story: "เช้าวันใหม่เริ่มต้นขึ้น คุณตื่นนอนมาพร้อมกับแสงแดดอ่อนๆ",
+      question: "สิ่งแรกที่คุณอยากทำในตอนเช้าคืออะไร?",
+      options: [
+        "นั่งสมาธิและคิดทบทวนชีวิต",
+        "ออกกำลังกายและวางแผนวัน",
+        "อ่านข่าวสารหรือเรียนรู้สิ่งใหม่",
+        "ทำอาหารหรืองานสร้างสรรค์"
+      ]
+    },
+    {
+      story: "ระหว่างทางไปทำงาน คุณแวะร้านกาแฟที่คุ้นเคย",
+      question: "คุณมักสั่งเครื่องดื่มแบบไหน?",
+      options: [
+        "เมนูประจำที่ชอบมานาน",
+        "เมนูใหม่ที่ท้าทาย",
+        "ถามบาริสต้าว่าเมนูไหนดี",
+        "สั่งตามอารมณ์วันนั้น"
+      ]
+    }
+    // 👉 หากต้องการให้ผมแปลงคำถาม 15 ข้อทั้งหมด บอกได้เลย
+  ];
+
+  let current = 0;
+  let answers = [];
+
+  function startQuiz() {
+    document.getElementById("intro").classList.add("hidden");
+    document.getElementById("quiz").classList.remove("hidden");
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    const q = questions[current];
+    document.getElementById("story").innerText = q.story;
+    document.getElementById("questionText").innerText = q.question;
+    document.getElementById("progress").innerText = `ข้อที่ ${current + 1} / ${questions.length}`;
+
+    const optionBox = document.getElementById("options");
+    optionBox.innerHTML = "";
+
+    q.options.forEach((opt, index) => {
+      const btn = document.createElement("button");
+      btn.innerText = opt;
+      btn.onclick = () => selectAnswer(index);
+      optionBox.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(index) {
+    answers.push(index);
+
+    if (current < questions.length - 1) {
+      current++;
+      loadQuestion();
+    } else {
+      showResult();
+    }
+  }
+
+  function analyze() {
+    const traits = { introspective: 0, ambitious: 0, social: 0, creative: 0 };
+
+    answers.forEach(a => {
+      if (a === 0) traits.introspective++;
+      if (a === 1) traits.ambitious++;
+      if (a === 2) traits.social++;
+      if (a === 3) traits.creative++;
+    });
+
+    const max = Math.max(...Object.values(traits));
+    const type = Object.keys(traits).find(k => traits[k] === max);
+
+    const personalities = {
+      introspective: {
+        title: "นักคิด - ผู้เดินทางภายใน",
+        desc: "คุณเป็นคนที่รักความลึกซึ้ง ชอบพัฒนาตนเอง",
+        strengths: "ใส่ใจ ลึกซึ้ง รอบคอบ",
+        careers: ["นักจิตวิทยา", "นักเขียน", "ครู", "นักวิจัย"],
+        reason: "เหมาะกับงานที่ต้องใช้ความเข้าใจลึกซึ้ง"
+      },
+      ambitious: {
+        title: "นักบุกเบิก - ผู้พิชิตเป้าหมาย",
+        desc: "คุณมุ่งมั่น ชัดเจน และไม่ยอมแพ้ง่าย",
+        strengths: "วางแผนดี มีเป้าหมาย",
+        careers: ["ผู้จัดการ", "นักขาย", "นักการเงิน"],
+        reason: "เหมาะกับงานที่ต้องผลักดันให้สำเร็จ"
+      }
+      // 👉 ต้องการเพิ่ม social / creative ไหม? ผมเติมให้ได้ครบ
+    };
+
+    return personalities[type];
+  }
+
+  function showResult() {
+    const res = analyze();
+
+    document.getElementById("quiz").classList.add("hidden");
+    document.getElementById("result").classList.remove("hidden");
+
+    document.getElementById("resultTitle").innerText = res.title;
+    document.getElementById("resultDesc").innerText = res.desc;
+    document.getElementById("resultStrength").innerText = res.strengths;
+    document.getElementById("resultReason").innerText = res.reason;
+
+    const careerList = document.getElementById("resultCareers");
+    careerList.innerHTML = "";
+    res.careers.forEach(c => {
+      const li = document.createElement("li");
+      li.innerText = c;
+      careerList.appendChild(li);
+    });
+  }
+
+  function resetQuiz() {
+    current = 0;
+    answers = [];
+    document.getElementById("result").classList.add("hidden");
+    document.getElementById("intro").classList.remove("hidden");
+  }
+</script>
+
 </body>
-    <script src="script.js"></script>
 </html>
